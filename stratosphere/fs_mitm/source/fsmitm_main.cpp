@@ -66,6 +66,7 @@ void __appInit(void) {
         fatalSimple(0xCAFE << 4 | 3);
     }
     
+#ifdef SYSMODULES_REQUIRE_EXOSPHERE    
     /* Check for exosphere API compatibility. */
     u64 exosphere_cfg;
     if (R_SUCCEEDED(splGetConfig((SplConfigItem)65000, &exosphere_cfg))) {
@@ -77,6 +78,7 @@ void __appInit(void) {
     } else {
         fatalSimple(0xCAFE << 4 | 0xFF);
     }
+#endif
     
     //splExit();
 }
