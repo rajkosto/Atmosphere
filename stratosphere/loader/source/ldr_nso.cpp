@@ -8,6 +8,7 @@
 #include "ldr_map.hpp"
 #include "ldr_random.hpp"
 #include "ldr_patcher.hpp"
+#include "ldr_config.hpp"
 
 static NsoUtils::NsoHeader g_nso_headers[NSO_NUM_MAX] = {0};
 static bool g_nso_present[NSO_NUM_MAX] = {0};
@@ -37,40 +38,34 @@ bool NsoUtils::CheckNsoStubbed(unsigned int index, u64 title_id) {
     return ret;
 }
 
-FILE *NsoUtils::OpenNso(unsigned int index, u64 title_id) {
-    if (title_id == 0x010000000000100D) {
-        Result rc;
-        rc = hidInitialize();
-        if (R_FAILED(rc)){
-            fatalSimple(MAKERESULT(Module_Libnx, LibnxError_InitFail_HID));
-        }
-        hidScanInput();
-        u64 kDown = hidKeysDown(CONTROLLER_P1_AUTO);
-        if((kDown & KEY_R) == 0) {
-            hidExit();
-            FILE *f_out = OpenNsoFromSdCard(index, title_id);
-            if (f_out != NULL) {
+FILE *NsoUtils::OpenNso(unsigned int index, u64 title_id) 
+{
+    const auto& ldrConfig = g_ldrConfig.tryLoadingFromFile();
+    if (title_id == ldrConfig.wantedTitleId) 
+    {
+        if (ldrConfig.shouldRedirectBasedOnKeys()) 
+        {
+            FILE *f_out = OpenNsoFromSdCard(index, LoaderConfig::HBLOADER_TITLE_ID);
+            if (f_out != nullptr)
                 return f_out;
-            } else if (CheckNsoStubbed(index, title_id)) {
-                return NULL;
-            } else {
-                return OpenNsoFromExeFS(index);
-            }
+            else if (CheckNsoStubbed(index, LoaderConfig::HBLOADER_TITLE_ID))
+                return nullptr;
         }
-        else { 
-            hidExit();
-            return OpenNsoFromExeFS(index); 
-        }
+        
+        return OpenNsoFromExeFS(index); 
     }
-    else {        
-        FILE *f_out = OpenNsoFromSdCard(index, title_id);
-        if (f_out != NULL) {
-            return f_out;
-        } else if (CheckNsoStubbed(index, title_id)) {
-            return NULL;
-        } else {
-            return OpenNsoFromExeFS(index);
-        }
+    else 
+    {
+        if (title_id != LoaderConfig::HBLOADER_TITLE_ID)
+        {
+            FILE* f_out = OpenNsoFromSdCard(index, title_id);
+            if (f_out != nullptr)
+                return f_out;
+            else if (CheckNsoStubbed(index, title_id))
+                return nullptr;
+        }       
+        
+        return OpenNsoFromExeFS(index);
     }
 }
 

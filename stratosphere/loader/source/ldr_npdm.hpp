@@ -87,7 +87,7 @@ class NpdmUtils {
         
         static FILE *OpenNpdmFromExeFS();
         static FILE *OpenNpdmFromSdCard(u64 tid);
-        static FILE *OpenNpdm(u64 tid);
+        static FILE *OpenNpdm(u64 tid, bool* outRequiresFixups=nullptr);
         static Result LoadNpdm(u64 tid, NpdmInfo *out);
         static Result LoadNpdmFromCache(u64 tid, NpdmInfo *out);
 };

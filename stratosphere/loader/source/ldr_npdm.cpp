@@ -3,6 +3,7 @@
 #include <cstdio>
 #include "ldr_npdm.hpp"
 #include "ldr_registration.hpp"
+#include "ldr_config.hpp"
 
 static NpdmUtils::NpdmCache g_npdm_cache = {0};
 static char g_npdm_path[FS_MAX_PATH] = {0};
@@ -27,34 +28,35 @@ FILE *NpdmUtils::OpenNpdmFromSdCard(u64 title_id) {
     return fopen(g_npdm_path, "rb");
 }
 
+FILE *NpdmUtils::OpenNpdm(u64 title_id, bool* outRequiresFixups) 
+{
+    const auto& ldrConfig = g_ldrConfig.tryLoadingFromFile();
 
-FILE *NpdmUtils::OpenNpdm(u64 title_id) {
-    if (title_id == 0x010000000000100D) {
-        Result rc;
-        rc = hidInitialize();
-        if (R_FAILED(rc)){
-            fatalSimple(MAKERESULT(Module_Libnx, LibnxError_InitFail_HID));
-        }
-        hidScanInput();
-        u64 kDown = hidKeysDown(CONTROLLER_P1_AUTO);
-        if((kDown & KEY_R) == 0) {
-            hidExit();
-            FILE *f_out = OpenNpdmFromSdCard(title_id);
-            if (f_out != NULL) {
+    if (title_id == ldrConfig.wantedTitleId) 
+    {
+        if (ldrConfig.shouldRedirectBasedOnKeys()) 
+        {   
+            FILE* f_out = OpenNpdmFromSdCard(LoaderConfig::HBLOADER_TITLE_ID);
+            if (f_out != nullptr)
+            {
+                if (outRequiresFixups != nullptr)
+                    *outRequiresFixups = true;
+
                 return f_out;
             }
-            return OpenNpdmFromExeFS();
         }
-        else {
-            hidExit();
-            return OpenNpdmFromExeFS();
-        }
+        
+        return OpenNpdmFromExeFS();
     }
-    else {
-        FILE *f_out = OpenNpdmFromSdCard(title_id);
-        if (f_out != NULL) {
-            return f_out;
-        }
+    else 
+    {
+        if (title_id != LoaderConfig::HBLOADER_TITLE_ID)
+        {
+            FILE* f_out = OpenNpdmFromSdCard(title_id);
+            if (f_out != nullptr) 
+                return f_out;
+        }        
+
         return OpenNpdmFromExeFS();
     }
 }
@@ -64,7 +66,8 @@ Result NpdmUtils::LoadNpdm(u64 tid, NpdmInfo *out) {
     
     g_npdm_cache.info = (const NpdmUtils::NpdmInfo){0};
     
-    FILE *f_npdm = OpenNpdm(tid);
+    bool requiresFixups = false;
+    FILE *f_npdm = OpenNpdm(tid, &requiresFixups);
     
     rc = 0x202;
     if (f_npdm == NULL) {
@@ -162,6 +165,16 @@ Result NpdmUtils::LoadNpdm(u64 tid, NpdmInfo *out) {
     
     /* We validated! */
     info->title_id = tid;
+    if (requiresFixups)
+    {
+        if (info->acid != nullptr)
+        {
+            info->acid->title_id_range_min = std::min(info->acid->title_id_range_min, info->title_id);
+            info->acid->title_id_range_max = std::max(info->acid->title_id_range_max, info->title_id);
+        }
+        if (info->aci0 != nullptr)
+            info->aci0->title_id = info->title_id;
+    }
     *out = *info;
     rc = 0;
     
