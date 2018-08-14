@@ -11,10 +11,9 @@ void CrashReport::BuildReport(u64 pid, bool has_extra_info) {
     this->has_extra_info = has_extra_info;
     if (OpenProcess(pid)) {
         ProcessExceptions();
-        if (kernelAbove500()) {
-            this->code_list.ReadCodeRegionsFromProcess(this->debug_handle, this->crashed_thread_info.GetPC(), this->crashed_thread_info.GetLR());
-            this->thread_list.ReadThreadsFromProcess(this->debug_handle, Is64Bit());
-        }
+        this->code_list.ReadCodeRegionsFromProcess(this->debug_handle, this->crashed_thread_info.GetPC(), this->crashed_thread_info.GetLR());
+        this->thread_list.ReadThreadsFromProcess(this->debug_handle, Is64Bit());
+        this->crashed_thread_info.SetCodeList(&this->code_list);
         this->thread_list.SetCodeList(&this->code_list);
         
         if (IsApplication()) {
@@ -273,6 +272,11 @@ void CrashReport::SaveToFile(FILE *f_report) {
         case DebugExceptionType::BadSvc:
             fprintf(f_report, "    Svc Id:                      0x%02x\n", this->exception_info.specific.bad_svc.id);
             break;
+        case DebugExceptionType::UserBreak:
+            fprintf(f_report, "    Break Reason:                0x%lx\n", this->exception_info.specific.user_break.break_reason);
+            fprintf(f_report, "    Break Address:               %s\n", this->code_list.GetFormattedAddressString(this->exception_info.specific.user_break.address));
+            fprintf(f_report, "    Break Size:                  0x%lx\n", this->exception_info.specific.user_break.size);
+            break;
         default:
             break;
     }
@@ -287,11 +291,11 @@ void CrashReport::SaveToFile(FILE *f_report) {
             fprintf(f_report, "    Size:                        0x%016lx\n", this->dying_message_size);
             CrashReport::Memdump(f_report, "    Dying Message:              ", this->dying_message, this->dying_message_size);
         }
-        fprintf(f_report, "Code Region Info:\n");
-        this->code_list.SaveToFile(f_report);
-        fprintf(f_report, "\nThread Report:\n");
-        this->thread_list.SaveToFile(f_report);
     }
+    fprintf(f_report, "Code Region Info:\n");
+    this->code_list.SaveToFile(f_report);
+    fprintf(f_report, "\nThread Report:\n");
+    this->thread_list.SaveToFile(f_report);
 }
 
 /* Lifted from hactool. */
