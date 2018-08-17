@@ -57,10 +57,14 @@ Result ContentManagement::UnmountCode() {
     return 0;
 }
 
-Result ContentManagement::MountCodeNspOnSd(u64 tid) {
+Result ContentManagement::MountCodeNspOnSd(u64 tid, const char* customPath) {
     char path[FS_MAX_PATH+1] = {0};
-    snprintf(path, FS_MAX_PATH, "@Sdcard:/atmosphere/titles/%016lx/exefs.nsp", tid); 
-    Result rc = fsOpenFileSystemWithId(&g_CodeFileSystem, 0, FsFileSystemType_ApplicationPackage, path);
+    if (customPath == nullptr)
+    {
+        snprintf(path, FS_MAX_PATH, "@Sdcard:/atmosphere/titles/%016lx/exefs.nsp", tid); 
+        customPath = path;
+    }
+    Result rc = fsOpenFileSystemWithId(&g_CodeFileSystem, 0, FsFileSystemType_ApplicationPackage, customPath);
     
     if (R_SUCCEEDED(rc)) {   
         fsdevMountDevice("code", g_CodeFileSystem);
