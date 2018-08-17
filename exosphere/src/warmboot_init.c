@@ -4,12 +4,13 @@
 #include "arm.h"
 #include "synchronization.h"
 #include "exocfg.h"
+#include "pmc.h"
 
 #undef  MC_BASE
 #define MC_BASE (MMIO_GET_DEVICE_PA(MMIO_DEVID_MC))
 
 #define WARMBOOT_GET_TZRAM_SEGMENT_PA(x) ((g_exosphere_target_firmware_for_init < EXOSPHERE_TARGET_FIRMWARE_500) \
-											? TZRAM_GET_SEGMENT_PA(x) : TZRAM_GET_SEGMENT_5X_PA(x))
+                                            ? TZRAM_GET_SEGMENT_PA(x) : TZRAM_GET_SEGMENT_5X_PA(x))
 
 /* start.s */
 void __set_memory_registers(uintptr_t ttbr0, uintptr_t vbar, uint64_t cpuectlr, uint32_t scr,
@@ -24,7 +25,7 @@ uintptr_t get_warmboot_crt0_stack_address(void) {
 uintptr_t get_warmboot_crt0_stack_address_critsec_enter(void) {
     unsigned int core_id = get_core_id();
 
-    if (core_id) {
+    if (core_id == 3) {
         return WARMBOOT_GET_TZRAM_SEGMENT_PA(TZRAM_SEGMENT_ID_CORE3_STACK) + 0x1000;
     } else {
         return WARMBOOT_GET_TZRAM_SEGMENT_PA(TZRAM_SEGEMENT_ID_SECMON_EVT) + 0x80 * (core_id + 1);
@@ -146,12 +147,12 @@ void _set_memory_registers_enable_mmu(const uintptr_t ttbr0) {
 
 void set_memory_registers_enable_mmu_1x_ttbr0(void) {
     static const uintptr_t ttbr0 = TZRAM_GET_SEGMENT_PA(TZRAM_SEGEMENT_ID_SECMON_EVT) + 0x800 - 64;
-	_set_memory_registers_enable_mmu(ttbr0);
+    _set_memory_registers_enable_mmu(ttbr0);
 }
 
 void set_memory_registers_enable_mmu_5x_ttbr0(void) {
     static const uintptr_t ttbr0 = TZRAM_GET_SEGMENT_5X_PA(TZRAM_SEGEMENT_ID_SECMON_EVT) + 0x800 - 64;
-	_set_memory_registers_enable_mmu(ttbr0);
+    _set_memory_registers_enable_mmu(ttbr0);
 }
 
 #if 0 /* Since we decided not to identity-unmap TZRAM */
@@ -180,17 +181,17 @@ void warmboot_init(void) {
     */
     flush_dcache_all();
     invalidate_icache_all();
-
+    
     /* On warmboot (not cpu_on) only */
     if (MC_SECURITY_CFG3_0 == 0) {
         init_dma_controllers(g_exosphere_target_firmware_for_init);
     }
-
+    
     /*identity_remap_tzram();*/
     /* Nintendo pointlessly fully invalidate the TLB & invalidate the data cache on the modified ranges here */
-	if (g_exosphere_target_firmware_for_init < EXOSPHERE_TARGET_FIRMWARE_500) {
-		set_memory_registers_enable_mmu_1x_ttbr0();
-	} else {
-		set_memory_registers_enable_mmu_5x_ttbr0();
-	}
+    if (g_exosphere_target_firmware_for_init < EXOSPHERE_TARGET_FIRMWARE_500) {
+        set_memory_registers_enable_mmu_1x_ttbr0();
+    } else {
+        set_memory_registers_enable_mmu_5x_ttbr0();
+    }
 }

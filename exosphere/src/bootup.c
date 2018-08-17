@@ -149,10 +149,10 @@ void bootup_misc_mmio(void) {
     /* Clear RESET Vector, setup CPU Secure Boot RESET Vectors. */
     uint32_t reset_vec;
     if (exosphere_get_target_firmware() >= EXOSPHERE_TARGET_FIRMWARE_500) {
-		reset_vec = TZRAM_GET_SEGMENT_5X_PA(TZRAM_SEGMENT_ID_WARMBOOT_CRT0_AND_MAIN);
+        reset_vec = TZRAM_GET_SEGMENT_5X_PA(TZRAM_SEGMENT_ID_WARMBOOT_CRT0_AND_MAIN);
     } else {
-		reset_vec = TZRAM_GET_SEGMENT_PA(TZRAM_SEGMENT_ID_WARMBOOT_CRT0_AND_MAIN);
-	}
+        reset_vec = TZRAM_GET_SEGMENT_PA(TZRAM_SEGMENT_ID_WARMBOOT_CRT0_AND_MAIN);
+    }
     EVP_CPU_RESET_VECTOR_0 = 0;
     SB_AA64_RESET_LOW_0 = reset_vec | 1;
     SB_AA64_RESET_HIGH_0 = 0;
@@ -268,7 +268,7 @@ void setup_current_core_state(void) {
     uint64_t temp_reg;
 
     /* Setup system registers. */
-    SET_SYSREG(spsr_el3, 0b1111 << 6 | 0b1001); /* use EL2h+DAIF set initially, may be overwritten later. Not in official code */
+    SET_SYSREG(spsr_el3, 0b1111 << 6 | 0b0101); /* use EL2h+DAIF set initially, may be overwritten later. Not in official code */
 
     SET_SYSREG(actlr_el3, 0x73ull);
     SET_SYSREG(actlr_el2, 0x73ull);
