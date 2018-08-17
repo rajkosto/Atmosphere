@@ -6,8 +6,6 @@
 #include "ldr_registration.hpp"
 #include "ldr_content_management.hpp"
 
-static FsFileSystem g_CodeFileSystem = {0};
-
 static std::vector<u64> g_created_titles;
 static bool g_has_initialized_fs_dev = false;
 
@@ -41,12 +39,12 @@ Result ContentManagement::MountCode(u64 tid, FsStorageId sid) {
         return rc;
     }
     
-    if (R_FAILED(rc = fsldrOpenCodeFileSystem(tid, path, &g_CodeFileSystem))) {
+    FsFileSystem codeFileSystem = {0};
+    if (R_FAILED(rc = fsldrOpenCodeFileSystem(tid, path, &codeFileSystem))) {
         fsldrExit();
         return rc;
-    }
-    
-    fsdevMountDevice("code", g_CodeFileSystem);
+    }    
+    fsdevMountDevice("code", codeFileSystem);
     
     fsldrExit();
     return rc;
@@ -64,10 +62,12 @@ Result ContentManagement::MountCodeNspOnSd(u64 tid, const char* customPath) {
         snprintf(path, FS_MAX_PATH, "@Sdcard:/atmosphere/titles/%016lx/exefs.nsp", tid); 
         customPath = path;
     }
-    Result rc = fsOpenFileSystemWithId(&g_CodeFileSystem, 0, FsFileSystemType_ApplicationPackage, customPath);
+
+    FsFileSystem codeFileSystem = {0};
+    Result rc = fsOpenFileSystemWithId(&codeFileSystem, 0, FsFileSystemType_ApplicationPackage, customPath);
     
     if (R_SUCCEEDED(rc)) {   
-        fsdevMountDevice("code", g_CodeFileSystem);
+        fsdevMountDevice("code", codeFileSystem);
     }
     
     return rc;
