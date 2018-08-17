@@ -20,7 +20,7 @@ Result ContentManagement::MountCode(u64 tid, FsStorageId sid) {
         TryMountSdCard();
     }
     
-    if (kernelAbove200() && g_has_initialized_fs_dev && R_SUCCEEDED(MountCodeNspOnSd(tid))) {
+    if (g_has_initialized_fs_dev && R_SUCCEEDED(MountCodeNspOnSd(tid))) {
         return 0x0;
     }
 
