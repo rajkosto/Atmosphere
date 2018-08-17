@@ -28,37 +28,17 @@ FILE *NpdmUtils::OpenNpdmFromSdCard(u64 title_id) {
     return fopen(g_npdm_path, "rb");
 }
 
-FILE *NpdmUtils::OpenNpdm(u64 title_id, bool* outRequiresFixups) 
+FILE *NpdmUtils::OpenNpdm(u64 title_id) 
 {
     const auto& ldrConfig = g_ldrConfig.tryLoadingFromFile();
-
     if (title_id == ldrConfig.wantedTitleId) 
-    {
-        if (ldrConfig.shouldRedirectBasedOnKeys()) 
-        {   
-            FILE* f_out = OpenNpdmFromSdCard(LoaderConfig::HBLOADER_TITLE_ID);
-            if (f_out != nullptr)
-            {
-                if (outRequiresFixups != nullptr)
-                    *outRequiresFixups = true;
-
-                return f_out;
-            }
-        }
-        
         return OpenNpdmFromExeFS();
-    }
-    else 
-    {
-        if (title_id != LoaderConfig::HBLOADER_TITLE_ID)
-        {
-            FILE* f_out = OpenNpdmFromSdCard(title_id);
-            if (f_out != nullptr) 
-                return f_out;
-        }        
 
-        return OpenNpdmFromExeFS();
+    FILE *f_out = OpenNpdmFromSdCard(title_id);
+    if (f_out != NULL) {
+        return f_out;
     }
+    return OpenNpdmFromExeFS();
 }
 
 Result NpdmUtils::LoadNpdm(u64 tid, NpdmInfo *out) {
@@ -66,8 +46,7 @@ Result NpdmUtils::LoadNpdm(u64 tid, NpdmInfo *out) {
     
     g_npdm_cache.info = (const NpdmUtils::NpdmInfo){0};
     
-    bool requiresFixups = false;
-    FILE *f_npdm = OpenNpdm(tid, &requiresFixups);
+    FILE *f_npdm = OpenNpdm(tid);
     
     rc = 0x202;
     if (f_npdm == NULL) {
@@ -165,7 +144,7 @@ Result NpdmUtils::LoadNpdm(u64 tid, NpdmInfo *out) {
     
     /* We validated! */
     info->title_id = tid;
-    if (requiresFixups)
+    //fixup the titleIds in ACI0 and ACID if needed
     {
         if (info->acid != nullptr)
         {

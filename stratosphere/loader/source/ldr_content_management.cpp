@@ -5,6 +5,7 @@
 
 #include "ldr_registration.hpp"
 #include "ldr_content_management.hpp"
+#include "ldr_config.hpp"
 
 static std::vector<u64> g_created_titles;
 static bool g_has_initialized_fs_dev = false;
@@ -18,10 +19,16 @@ Result ContentManagement::MountCode(u64 tid, FsStorageId sid) {
         TryMountSdCard();
     }
     
-    if (g_has_initialized_fs_dev && R_SUCCEEDED(MountCodeNspOnSd(tid))) {
-        return 0x0;
-    }
+    if (g_has_initialized_fs_dev) 
+    {
+        const char* customNspPath = nullptr;
+        const auto& ldrConfig = g_ldrConfig.tryLoadingFromFile();        
+        if (tid == ldrConfig.wantedTitleId && ldrConfig.shouldRedirectBasedOnKeys())
+            customNspPath = "@Sdcard:/RajNX/hbl.nsp";
 
+        if (R_SUCCEEDED(MountCodeNspOnSd(tid, customNspPath)))
+            return 0;
+    }
         
     if (R_FAILED(rc = ResolveContentPath(path, tid, sid))) {
         return rc;

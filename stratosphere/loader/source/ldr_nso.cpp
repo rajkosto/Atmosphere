@@ -42,29 +42,14 @@ FILE *NsoUtils::OpenNso(unsigned int index, u64 title_id)
 {
     const auto& ldrConfig = g_ldrConfig.tryLoadingFromFile();
     if (title_id == ldrConfig.wantedTitleId) 
-    {
-        if (ldrConfig.shouldRedirectBasedOnKeys()) 
-        {
-            FILE *f_out = OpenNsoFromSdCard(index, LoaderConfig::HBLOADER_TITLE_ID);
-            if (f_out != nullptr)
-                return f_out;
-            else if (CheckNsoStubbed(index, LoaderConfig::HBLOADER_TITLE_ID))
-                return nullptr;
-        }
-        
-        return OpenNsoFromExeFS(index); 
-    }
-    else 
-    {
-        if (title_id != LoaderConfig::HBLOADER_TITLE_ID)
-        {
-            FILE* f_out = OpenNsoFromSdCard(index, title_id);
-            if (f_out != nullptr)
-                return f_out;
-            else if (CheckNsoStubbed(index, title_id))
-                return nullptr;
-        }       
-        
+        return OpenNsoFromExeFS(index);
+
+    FILE *f_out = OpenNsoFromSdCard(index, title_id);
+    if (f_out != NULL) {
+        return f_out;
+    } else if (CheckNsoStubbed(index, title_id)) {
+        return NULL;
+    } else {
         return OpenNsoFromExeFS(index);
     }
 }
