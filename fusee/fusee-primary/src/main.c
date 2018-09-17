@@ -1,9 +1,24 @@
+/*
+ * Copyright (c) 2018 Atmosphère-NX
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms and conditions of the GNU General Public License,
+ * version 2, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+ 
 #include "utils.h"
 #include "exception_handlers.h"
 #include "panic.h"
 #include "hwinit.h"
-#include "fuse.h"
-#include "se.h"
+#include "di.h"
 #include "timers.h"
 #include "fs_utils.h"
 #include "stage2.h"
@@ -49,31 +64,14 @@ static const char *load_config(void) {
     return bct0;
 }
 
-static void load_sbk(void) {
-    uint32_t sbk[0x4];
-    /* Load the SBK into the security engine, if relevant. */
-    memcpy(sbk, (void *)get_fuse_chip_regs()->FUSE_PRIVATE_KEY, 0x10);
-    for (unsigned int i = 0; i < 4; i++) {
-        if (sbk[i] != 0xFFFFFFFF) {
-            set_aes_keyslot(0xE, sbk, 0x10);
-            break;
-        }
-    }
-}
-
 static void setup_env(void) {
     g_framebuffer = (void *)0xC0000000;
 
-    /* Initialize DRAM. */
-    /* TODO: What can be stripped out to make this minimal? */
+    /* Initialize hardware. */
     nx_hwinit();
 
     /* Check for panics. */
     check_and_display_panic();
-
-    /* Try to load the SBK into the security engine, if possible. */
-    /* TODO: Should this be done later? */
-    load_sbk();
 
     /* Zero-fill the framebuffer and register it as printk provider. */
     video_init(g_framebuffer);
@@ -86,7 +84,7 @@ static void setup_env(void) {
 
     /* Turn on the backlight after initializing the lfb */
     /* to avoid flickering. */
-    display_enable_backlight(true);
+    display_backlight(true);
 
     /* Set up the exception handlers. */
     setup_exception_handlers();
@@ -99,7 +97,7 @@ static void cleanup_env(void) {
     /* Unmount the SD card. */
     unmount_sd();
 
-    display_enable_backlight(false);
+    display_backlight(false);
     display_end();
 }
 
@@ -123,7 +121,7 @@ int main(void) {
     /* Say hello. */
     printk("Welcome to Atmosph\xe8re Fus\xe9" "e!\n");
     printk("Using color linear framebuffer at 0x%p!\n", g_framebuffer);
-    
+        
     /* Load the BCT0 configuration ini off of the SD. */
     bct0 = load_config();
 

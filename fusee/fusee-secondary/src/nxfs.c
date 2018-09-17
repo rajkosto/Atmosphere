@@ -1,12 +1,28 @@
+/*
+ * Copyright (c) 2018 Atmosphère-NX
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms and conditions of the GNU General Public License,
+ * version 2, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+ 
 #include <stdio.h>
 #include <stdlib.h>
 #include <malloc.h>
 #include <errno.h>
 #include <string.h>
 #include "nxfs.h"
+#include "mc.h"
 #include "gpt.h"
 #include "se.h"
-#include "hwinit.h"
 #include "utils.h"
 #include "sdmmc/sdmmc.h"
 
@@ -48,6 +64,7 @@ static int mmc_partition_initialize(device_partition_t *devpart) {
         devpart->crypto_work_buffer_num_sectors = 0;
     }
 
+    /* Enable AHB redirection if necessary. */
     if (!g_ahb_redirect_enabled) {
         mc_enable_ahb_redirect();
         g_ahb_redirect_enabled = true;
@@ -78,6 +95,12 @@ static int mmc_partition_initialize(device_partition_t *devpart) {
 
 static void mmc_partition_finalize(device_partition_t *devpart) {
     free(devpart->crypto_work_buffer);
+    
+    /* Disable AHB redirection if necessary. */
+    if (g_ahb_redirect_enabled) {
+        mc_disable_ahb_redirect();
+        g_ahb_redirect_enabled = false;
+    }
 }
 
 static int mmc_partition_read(device_partition_t *devpart, void *dst, uint64_t sector, uint64_t num_sectors) {

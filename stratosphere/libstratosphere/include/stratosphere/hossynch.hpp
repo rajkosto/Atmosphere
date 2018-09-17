@@ -1,64 +1,94 @@
+/*
+ * Copyright (c) 2018 Atmosphère-NX
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms and conditions of the GNU General Public License,
+ * version 2, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+ 
 #pragma once
 #include <switch.h>
 
 class HosMutex {
     private:
         Mutex m;
+        Mutex *GetMutex() {
+            return &this->m;
+        }
     public:
         HosMutex() {
-            mutexInit(&this->m);
+            mutexInit(GetMutex());
         }
         
         void lock() {
-            mutexLock(&this->m);
+            mutexLock(GetMutex());
         }
         
         void unlock() {
-            mutexUnlock(&this->m);
+            mutexUnlock(GetMutex());
         }
         
         bool try_lock() {
-            return mutexTryLock(&this->m);
+            return mutexTryLock(GetMutex());
         }
+        
+    friend class HosCondVar;
 };
 
 class HosRecursiveMutex {
     private:
         RMutex m;
+        RMutex *GetMutex() {
+            return &this->m;
+        }
     public:
         HosRecursiveMutex() {
-            rmutexInit(&this->m);
+            rmutexInit(GetMutex());
         }
         
         void lock() {
-            rmutexLock(&this->m);
+            rmutexLock(GetMutex());
         }
         
         void unlock() {
-            rmutexUnlock(&this->m);
+            rmutexUnlock(GetMutex());
         }
         
         bool try_lock() {
-            return rmutexTryLock(&this->m);
+            return rmutexTryLock(GetMutex());
         }
 };
 
 class HosCondVar {
     private:
         CondVar cv;
-        Mutex m;
     public:
         HosCondVar() {
-            mutexInit(&m);
-            condvarInit(&cv, &m);
+            condvarInit(&cv);
         }
         
-        Result WaitTimeout(u64 timeout) {
-            return condvarWaitTimeout(&cv, timeout);
+        Result WaitTimeout(u64 timeout, HosMutex *hm) {
+            return WaitTimeout(timeout, hm->GetMutex());
         }
         
-        Result Wait() {
-            return condvarWait(&cv);
+        Result Wait(HosMutex *hm) {
+            return Wait(hm->GetMutex());
+        }
+        
+        Result WaitTimeout(u64 timeout, Mutex *m) {
+            return condvarWaitTimeout(&cv, m, timeout);
+        }
+        
+        Result Wait(Mutex *m) {
+            return condvarWait(&cv, m);
         }
         
         Result Wake(int num) {
@@ -76,45 +106,25 @@ class HosCondVar {
 
 class HosSemaphore {
     private:
-        CondVar cv;
-        Mutex m;
-        u64 count;
+        Semaphore s;
     public:
         HosSemaphore() {
-            count = 0;
-            mutexInit(&m);
-            condvarInit(&cv, &m);
+            semaphoreInit(&s, 0);
         }
         
-        HosSemaphore(u64 c) : count(c) {
-            mutexInit(&m);
-            condvarInit(&cv, &m);
+        HosSemaphore(u64 c) {
+            semaphoreInit(&s, c);
         }
         
         void Signal() {
-            mutexLock(&this->m);
-            count++;
-            condvarWakeOne(&cv);
-            mutexUnlock(&this->m);
+            semaphoreSignal(&s);
         }
         
         void Wait() {
-            mutexLock(&this->m);
-            while (!count) {
-                condvarWait(&cv);
-            }
-            count--;
-            mutexUnlock(&this->m);
+            semaphoreWait(&s);
         }
         
         bool TryWait() {
-            mutexLock(&this->m);
-            bool success = false;
-            if (count) {
-                count--;
-                success = true;
-            }
-            mutexUnlock(&this->m);
-            return success;
+            return semaphoreTryWait(&s);
         }
 };

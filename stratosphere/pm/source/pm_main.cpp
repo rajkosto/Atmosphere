@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2018 Atmosphère-NX
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms and conditions of the GNU General Public License,
+ * version 2, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+ 
 #include <cstdlib>
 #include <cstdint>
 #include <cstring>
@@ -29,15 +45,15 @@ extern "C" {
 
 
 void __libnx_initheap(void) {
-	void*  addr = nx_inner_heap;
-	size_t size = nx_inner_heap_size;
+    void*  addr = nx_inner_heap;
+    size_t size = nx_inner_heap_size;
 
-	/* Newlib */
-	extern char* fake_heap_start;
-	extern char* fake_heap_end;
+    /* Newlib */
+    extern char* fake_heap_start;
+    extern char* fake_heap_end;
 
-	fake_heap_start = (char*)addr;
-	fake_heap_end   = (char*)addr + size;
+    fake_heap_start = (char*)addr;
+    fake_heap_end   = (char*)addr + size;
 }
 
 void __appInit(void) {
@@ -128,6 +144,6 @@ int main(int argc, char **argv)
     
     /* Cleanup. */
     delete server_manager;
-	return 0;
+    return 0;
 }
 

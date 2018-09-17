@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2018 Atmosphère-NX
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms and conditions of the GNU General Public License,
+ * version 2, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+ 
 #include <stdint.h>
 
 #include "memory_map.h"
@@ -22,6 +38,26 @@ volatile security_carveout_t *get_carveout_by_id(unsigned int carveout) {
     return NULL;
 }
 
+void configure_gpu_ucode_carveout(void) {
+    /* Starting in 6.0.0, Carveout 2 is configured later on. */
+    /* This is a helper function to make this easier... */
+    volatile security_carveout_t *carveout = get_carveout_by_id(2);
+    carveout->paddr_low = 0x80020000;
+    carveout->paddr_high = 0;
+    carveout->size_big_pages = 2; /* 0x40000 */
+    carveout->flags_0 = 0;
+    carveout->flags_1 = 0;
+    carveout->flags_2 = 0x3000000;
+    carveout->flags_3 = 0;
+    carveout->flags_4 = 0x300;
+    carveout->flags_5 = 0;
+    carveout->flags_6 = 0;
+    carveout->flags_7 = 0;
+    carveout->flags_8 = 0;
+    carveout->flags_9 = 0;
+    carveout->allowed_clients = 0x440167E;
+}
+
 void configure_default_carveouts(void) {
     /* Configure Carveout 1 (UNUSED) */
     volatile security_carveout_t *carveout = get_carveout_by_id(1);
@@ -41,21 +77,9 @@ void configure_default_carveouts(void) {
     carveout->allowed_clients = 0x04000006;
 
     /* Configure Carveout 2 (GPU UCODE) */
-    carveout = get_carveout_by_id(2);
-    carveout->paddr_low = 0x80020000;
-    carveout->paddr_high = 0;
-    carveout->size_big_pages = 2; /* 0x40000 */
-    carveout->flags_0 = 0;
-    carveout->flags_1 = 0;
-    carveout->flags_2 = 0x3000000;
-    carveout->flags_3 = 0;
-    carveout->flags_4 = 0x300;
-    carveout->flags_5 = 0;
-    carveout->flags_6 = 0;
-    carveout->flags_7 = 0;
-    carveout->flags_8 = 0;
-    carveout->flags_9 = 0;
-    carveout->allowed_clients = 0x440167E;
+    if (exosphere_get_target_firmware() < EXOSPHERE_TARGET_FIRMWARE_600) {
+        configure_gpu_ucode_carveout();
+    }
 
     /* Configure Carveout 3 (UNUSED GPU) */
     carveout = get_carveout_by_id(3);

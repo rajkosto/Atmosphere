@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2018 Atmosphère-NX
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms and conditions of the GNU General Public License,
+ * version 2, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+ 
 #include <stdio.h>
 #include <stdlib.h>
 #include "utils.h"
@@ -84,7 +100,6 @@ void package2_rebuild_and_copy(package2_header_t *package2, uint32_t target_firm
     free(rebuilt_ini1);
     free(rebuilt_package2);
 }
-
 
 static void package2_crypt_ctr(unsigned int master_key_rev, void *dst, size_t dst_size, const void *src, size_t src_size, const void *ctr, size_t ctr_size) {
     /* Derive package2 key. */
@@ -261,9 +276,6 @@ static size_t package2_get_thermosphere(void **thermosphere) {
     (*thermosphere) = NULL;
     return 0;
 }
-
-
-
 
 static ini1_header_t *package2_rebuild_ini1(ini1_header_t *ini1, uint32_t target_firmware) {
     /* TODO: Do we want to support loading another INI from sd:/whatever/INI1.bin? */

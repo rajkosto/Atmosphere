@@ -1,9 +1,25 @@
+/*
+ * Copyright (c) 2018 Atmosphère-NX
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms and conditions of the GNU General Public License,
+ * version 2, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+ 
 #include "key_derivation.h"
 #include "masterkey.h"
 #include "se.h"
 #include "exocfg.h"
 #include "fuse.h"
-#include "hwinit.h"
+#include "tsec.h"
 #include "utils.h"
 
 #define AL16 ALIGN(16)
@@ -39,7 +55,7 @@ static const uint8_t AL16 masterkey_4x_seed[0x10] = {
 static nx_dec_keyblob_t AL16 g_dec_keyblobs[32];
 
 static int get_tsec_key(void *dst, const void *tsec_fw, size_t tsec_fw_size, uint32_t tsec_key_id) {
-    return tsec_query((u32)tsec_fw, dst, tsec_key_id);
+    return tsec_get_key(dst, tsec_key_id, tsec_fw);
 }
 
 static int get_keyblob(nx_keyblob_t *dst, uint32_t revision, const nx_keyblob_t *keyblobs, uint32_t available_revision) {

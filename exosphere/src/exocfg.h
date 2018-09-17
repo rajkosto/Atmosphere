@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2018 Atmosphère-NX
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms and conditions of the GNU General Public License,
+ * version 2, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+ 
 #ifndef EXOSPHERE_EXOSPHERE_CONFIG_H
 #define EXOSPHERE_EXOSPHERE_CONFIG_H
 
@@ -16,9 +32,10 @@
 #define EXOSPHERE_TARGET_FIRMWARE_300 3
 #define EXOSPHERE_TARGET_FIRMWARE_400 4
 #define EXOSPHERE_TARGET_FIRMWARE_500 5
+#define EXOSPHERE_TARGET_FIRMWARE_600 6
 
 /* TODO: What should this be, for release? */
-#define EXOSPHERE_TARGET_FIRMWARE_DEFAULT_FOR_DEBUG EXOSPHERE_TARGET_FIRMWARE_500
+#define EXOSPHERE_TARGET_FIRMWARE_DEFAULT_FOR_DEBUG EXOSPHERE_TARGET_FIRMWARE_600
 #define EXOSPHERE_LOOSEN_PACKAGE2_RESTRICTIONS_FOR_DEBUG 1
 
 #define MAILBOX_BASE_PHYS  (MMIO_GET_DEVICE_PA(MMIO_DEVID_NXBOOTLOADER_MAILBOX))

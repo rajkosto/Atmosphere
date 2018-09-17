@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2018 Atmosphère-NX
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms and conditions of the GNU General Public License,
+ * version 2, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+ 
 #include <switch.h>
 #include <stratosphere.hpp>
 #include <atomic>
@@ -462,5 +478,15 @@ Result Registration::EnableDebugForTitleId(u64 tid, Handle *out) {
 Result Registration::EnableDebugForApplication(Handle *out) {
     g_debug_next_application = true;
     *out = g_debug_application_event->get_handle();
+    return 0;
+}
+
+Result Registration::DisableDebug(u32 which) {
+    if (which & 1) {
+        g_debug_on_launch_tid = 0;
+    }
+    if (which & 2) {
+        g_debug_next_application = false;
+    }
     return 0;
 }

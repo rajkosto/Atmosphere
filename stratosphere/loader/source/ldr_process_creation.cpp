@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2018 Atmosphère-NX
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms and conditions of the GNU General Public License,
+ * version 2, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+ 
 #include <switch.h>
 #include <algorithm>
 
@@ -7,6 +23,15 @@
 #include "ldr_content_management.hpp"
 #include "ldr_npdm.hpp"
 #include "ldr_nso.hpp"
+
+extern "C" {
+    
+    bool __attribute__((weak)) kernelAbove600(void) {
+        u64 tmp;
+        return (svcGetInfo(&tmp, 21, INVALID_HANDLE, 0) != 0xF001);
+    }
+    
+}
 
 Result ProcessCreation::InitializeProcessInfo(NpdmUtils::NpdmInfo *npdm, Handle reslimit_h, u64 arg_flags, ProcessInfo *out_proc_info) {
     /* Initialize a ProcessInfo using an npdm. */
@@ -48,7 +73,7 @@ Result ProcessCreation::InitializeProcessInfo(NpdmUtils::NpdmInfo *npdm, Handle 
             if ((out_proc_info->process_flags & 6) == 0) {
                 return 0x809;
             }
-            if ((application_type & 3) != 1) {
+            if (!(((application_type & 3) == 1) || (kernelAbove600() && (application_type & 3) == 2))) {
                 return 0x809;
             }
             if (npdm->header->system_resource_size > 0x1FE00000) {

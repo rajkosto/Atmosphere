@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2018 Atmosphère-NX
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms and conditions of the GNU General Public License,
+ * version 2, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+ 
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -19,6 +35,11 @@
 
 static ini1_header_t *g_stratosphere_ini1 = NULL;
 
+static bool g_stratosphere_loader_enabled = true;
+static bool g_stratosphere_sm_enabled = true;
+static bool g_stratosphere_pm_enabled = true;
+static bool g_stratosphere_boot_enabled = false;
+
 extern const uint8_t boot_100_kip[], boot_200_kip[];
 extern const uint8_t loader_kip[], pm_kip[], sm_kip[];
 extern const uint32_t boot_100_kip_size, boot_200_kip_size;
@@ -29,6 +50,7 @@ extern const uint32_t loader_kip_size, pm_kip_size, sm_kip_size;
 ini1_header_t *stratosphere_get_ini1(uint32_t target_firmware) {
     const uint8_t *boot_kip = NULL;
     uint32_t boot_kip_size = 0;
+    uint32_t num_processes = 0;
     uint8_t *data;
 
     if (g_stratosphere_ini1 != NULL) {
@@ -43,7 +65,29 @@ ini1_header_t *stratosphere_get_ini1(uint32_t target_firmware) {
         boot_kip_size = boot_200_kip_size;
     }
 
-    size_t size = sizeof(ini1_header_t) + loader_kip_size + pm_kip_size + sm_kip_size + boot_kip_size;
+    size_t size = sizeof(ini1_header_t);
+    
+    /* Calculate our processes' sizes. */
+    if (g_stratosphere_loader_enabled) {
+        size += loader_kip_size;
+        num_processes++;
+    }
+    
+    if (g_stratosphere_pm_enabled) {
+        size += pm_kip_size;
+        num_processes++;
+    }
+    
+    if (g_stratosphere_sm_enabled) {
+        size += sm_kip_size;
+        num_processes++;
+    }
+    
+    if (g_stratosphere_boot_enabled) {
+        size += boot_kip_size;
+        num_processes++;
+    }
+    
     g_stratosphere_ini1 = (ini1_header_t *)malloc(size);
 
     if (g_stratosphere_ini1 == NULL) {
@@ -52,24 +96,32 @@ ini1_header_t *stratosphere_get_ini1(uint32_t target_firmware) {
 
     g_stratosphere_ini1->magic = MAGIC_INI1;
     g_stratosphere_ini1->size = size;
-    g_stratosphere_ini1->num_processes = 4;
+    g_stratosphere_ini1->num_processes = num_processes;
     g_stratosphere_ini1->_0xC = 0;
 
     data = g_stratosphere_ini1->kip_data;
 
     /* Copy our processes. */
-    memcpy(data, loader_kip, loader_kip_size);
-    data += loader_kip_size;
+    if (g_stratosphere_loader_enabled) {
+        memcpy(data, loader_kip, loader_kip_size);
+        data += loader_kip_size;
+    }
 
-    memcpy(data, pm_kip, pm_kip_size);
-    data += pm_kip_size;
+    if (g_stratosphere_pm_enabled) {
+        memcpy(data, pm_kip, pm_kip_size);
+        data += pm_kip_size;
+    }
 
-    memcpy(data, sm_kip, sm_kip_size);
-    data += sm_kip_size;
+    if (g_stratosphere_sm_enabled) {
+        memcpy(data, sm_kip, sm_kip_size);
+        data += sm_kip_size;
+    }
 
-    memcpy(data, boot_kip, boot_kip_size);
-    data += boot_kip_size;
-
+    if (g_stratosphere_boot_enabled) {
+        memcpy(data, boot_kip, boot_kip_size);
+        data += boot_kip_size;
+    }
+    
     return g_stratosphere_ini1;
 }
 

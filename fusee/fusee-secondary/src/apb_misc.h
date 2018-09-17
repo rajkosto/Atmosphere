@@ -1,5 +1,32 @@
+/*
+ * Copyright (c) 2018 Atmosphère-NX
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms and conditions of the GNU General Public License,
+ * version 2, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+ 
 #ifndef FUSEE_APB_MISC_H
 #define FUSEE_APB_MISC_H
+
+#include <stdint.h>
+
+#define APB_MISC_BASE 0x70000000
+#define APB_PADCTL_BASE 0x70000810
+#define MAKE_APB_MISC_REG(n) MAKE_REG32(APB_MISC_BASE + n)
+#define MAKE_APB_PADCTL_REG(n) MAKE_REG32(APB_PADCTL_BASE + n)
+
+#define APB_MISC_PP_PINMUX_GLOBAL_0 MAKE_APB_MISC_REG(0x40)
+#define APB_MISC_GP_WIFI_EN_CFGPADCTRL_0 MAKE_APB_MISC_REG(0xB64)
+#define APB_MISC_GP_WIFI_RST_CFGPADCTRL_0 MAKE_APB_MISC_REG(0xB68)
 
 #define SDMMC1_PAD_CAL_DRVUP_SHIFT              (20)
 #define SDMMC1_PAD_CAL_DRVDN_SHIFT              (12)
@@ -48,7 +75,7 @@ typedef struct {
 
 static inline volatile tegra_padctl_t *padctl_get_regs(void)
 {
-    return (volatile tegra_padctl_t *)0x70000810;
+    return (volatile tegra_padctl_t *)APB_PADCTL_BASE;
 }
 
 #endif

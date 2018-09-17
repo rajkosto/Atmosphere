@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2018 naehrwert
+ * Copyright (c) 2018 CTCaer
+ * Copyright (c) 2018 Atmosphère-NX
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms and conditions of the GNU General Public License,
+ * version 2, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+ 
 #include <string.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -11,8 +29,8 @@
 #include "../apb_misc.h"
 #include "../gpio.h"
 #include "../pmc.h"
+#include "../max7762x.h"
 #include "../lib/driver_utils.h"
-#include "../hwinit/max7762x.h"
 
 static SdmmcLogLevel g_sdmmc_log_level = SDMMC_LOG_NONE;
 
@@ -399,16 +417,16 @@ static int sdmmc_clk_set_source(SdmmcControllerNum controller, uint32_t clk_freq
     switch (controller)
     {
         case SDMMC_1:
-            car->clk_src[CLK_SOURCE_SDMMC1] = (CLK_SOURCE_FIRST | car_div);
+            car->clk_source_sdmmc1 = (CLK_SOURCE_FIRST | car_div);
             break;
         case SDMMC_2:
-            car->clk_src[CLK_SOURCE_SDMMC2] = (CLK_SOURCE_FIRST | car_div);
+            car->clk_source_sdmmc2 = (CLK_SOURCE_FIRST | car_div);
             break;
         case SDMMC_3:
-            car->clk_src[CLK_SOURCE_SDMMC3] = (CLK_SOURCE_FIRST | car_div);
+            car->clk_source_sdmmc3 = (CLK_SOURCE_FIRST | car_div);
             break;
         case SDMMC_4:
-            car->clk_src[CLK_SOURCE_SDMMC4] = (CLK_SOURCE_FIRST | car_div);
+            car->clk_source_sdmmc4 = (CLK_SOURCE_FIRST | car_div);
             break;
     }
 

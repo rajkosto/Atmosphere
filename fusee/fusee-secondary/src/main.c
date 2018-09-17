@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2018 Atmosphère-NX
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms and conditions of the GNU General Public License,
+ * version 2, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+ 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -86,7 +102,8 @@ int main(int argc, void **argv) {
     g_do_nxboot = loader_ctx->chainload_entrypoint == 0;
     if (g_do_nxboot) {
         printf("Now performing nxboot.\n");
-        nxboot_main();
+        uint32_t boot_memaddr = nxboot_main();
+        nxboot_finish(boot_memaddr);
     } else {
         /* TODO: What else do we want to do in terms of argc/argv? */
         const char *path = get_loader_ctx()->file_paths_to_load[get_loader_ctx()->file_id_of_entrypoint];
